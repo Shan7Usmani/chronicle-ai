@@ -4,7 +4,10 @@ import { getAgent, listPosts } from "@/lib/db";
 import { isDueSlot } from "@/lib/schedule";
 import { runAgentTick } from "@/lib/agents/pipeline";
 
-type FeedPost = Pick<Post, "id" | "createdAt" | "text" | "rationale" | "sources">;
+type FeedPost = Pick<
+  Post,
+  "id" | "createdAt" | "text" | "rationale" | "sources" | "title" | "editorialScore"
+>;
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -33,6 +36,8 @@ export async function GET(req: Request) {
     text: p.text,
     rationale: p.rationale,
     sources: p.sources,
+    title: p.title,
+    editorialScore: p.editorialScore,
   }));
 
   return NextResponse.json({ posts: feed }, {

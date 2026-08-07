@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #05080c;
+  --foreground: #e6edf3;
+  --neon-green: #00ff7a;
+  --neon-cyan: #00d9ff;
+  --neon-amber: #ffb02e;
+  --muted: #8b98a5;
+  --panel: rgba(255, 255, 255, 0.03);
+  --panel-border: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -12,15 +18,60 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--background);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 255, 122, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 122, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(8px);
+}
+
+.neon-text {
+  color: var(--neon-green);
+  text-shadow: 0 0 18px rgba(0, 255, 122, 0.45);
+}
+
+.neon-cyan-text {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 18px rgba(0, 217, 255, 0.45);
+}
+
+.amber-text {
+  color: var(--neon-amber);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(0, 255, 122, 0.5);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 6px rgba(0, 255, 122, 0);
+  }
 }
