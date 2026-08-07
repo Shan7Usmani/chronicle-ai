@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# dev server logs
+dev.log
+dev.err
+*.log
+
+# local smoke-test artifacts
+agentid.txt
+feed_check.json
