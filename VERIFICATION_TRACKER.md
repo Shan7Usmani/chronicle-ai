@@ -11,7 +11,7 @@
 |---|-------------|---------|------------------|
 | E1 | Public repo | ✅ | `Shan7Usmani/chronicle-ai` — PUBLIC (`gh repo view`) |
 | E2 | Valid repo URL | ✅ | https://github.com/Shan7Usmani/chronicle-ai |
-| E3 | Working live app | ⬜ PENDING | Build clean locally; **no Vercel deploy yet** |
+| E3 | Working live app | ✅ | **Deployed** https://chronicle-ai-one.vercel.app — 200, landing + all 4 API routes live (verified 2026-08-09) |
 | E4 | PROMPTS.md in repo | ✅ CREATED | `PROMPTS.md` present; build-agent prompts still to be appended |
 | E5 | Registered team | ⬜ (user) | |
 | E6 | Pre-deadline | ✅ | ~19h remain (deadline Sun Aug 9 20:00 IST) |
@@ -35,7 +35,7 @@
 | Q2 | `npm run lint` | ✅ PASS | 0 errors (2026-08-09) |
 | Q3 | `npm run build` | ✅ PASS | Next 16.3.0 Turbopack; all 4 API routes + `/` compile |
 | Q4 | Unit tests on core logic | ✅ PASS | 16/16 (scoring, memory, schedule) via vitest |
-| Q5 | Contract smoke test | ⬜ MISSING | Needs live run: init → feed polls show posts over time |
+| Q5 | Contract smoke test | ✅ PASS (live) | 2026-08-09 on prod: init → `{agentId}` → post auto-published ~90s later via feed GET → idempotent (append-only, 1 post) → schema/order/ISO verified; tick auth (401/200), unknown agent → `{posts:[]}`, missing agentId → 400 |
 
 ---
 
@@ -59,29 +59,32 @@ and returns the real row id; `insertEvaluation` receives that id. Memory path al
 returned a UUID.
 
 ### C3 (LOW) — feed 404 vs empty posts
-Still open. `GET /api/agent/feed?agentId=<unknown>` returns 404 `{error}`. Spec only
-shows `{posts:[]}` when none exist. Recommend `{posts:[]}` for unknown agents too (or
-keep 404 + document in README). **Decision needed before submission.**
+**RESOLVED 2026-08-09.** `GET /api/agent/feed?agentId=<unknown>` now returns
+`{posts:[]}` (200) — the feed treats an unknown agent as having no posts yet,
+matching the spec's empty-state shape. Live-verified on prod.
 
 ### E3 (MEDIUM) — no live deployment
-Build is clean locally. Needs Vercel deploy + env vars (`SUPABASE_URL`,
-`SUPABASE_SERVICE_ROLE_KEY` optional — simulation mode works without; `AGENT_SECRET`
-override; `PUBLISH_FIRST_SLOT_MIN` ~0.5 for fast demo).
+**RESOLVED 2026-08-09.** Deployed to https://chronicle-ai-one.vercel.app with
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (publishable key, anon role) and
+`AGENT_SECRET` set. Landing + all 4 API routes live. Auto-deploys from `master`.
 
 ### A4/A5 (HIGH) — build-agent prompts not yet logged in PROMPTS.md
 The QA session (Aug 7) is logged. Every prompt from the **build agent** session that
 wrote `src/lib/**`, `src/app/api/agent/*`, `supabase/migrations/00001_init.sql`,
 `docs/CONTRACTS.md`, `.env.example`, the UI (`page.tsx`, `live-feed.tsx`) must be
 appended with tool + produced-files + feature mapping. Stage 2 cross-checks this.
+**Still TODO — needs the build-agent prompt history.**
 
 ### Q5 (HIGH) — contract smoke test not yet run
-Live test: init once → poll feed → confirm posts appear over time with correct schema,
-reverse-chron order, ISO 8601 UTC. Can be done pre-deploy (local dev server) and
-post-deploy (Vercel).
+**DONE 2026-08-09 (live on prod).** init → auto-published first post ~90s later via
+feed GET; append-only + idempotent (1 post, totalRuns=1); schema/order/ISO verified;
+tick auth 401/200; unknown agent `{posts:[]}`; missing agentId 400. Full details in
+Q5 table row.
 
 ### AGENT_SECRET default (LOW)
 `.env.example` and `config.ts` default `AGENT_SECRET=chronicle-dev-secret`.
-Fine for dev; must be overridden in the deployed environment.
+Fine for dev; must be overridden in the deployed environment. **DONE — Vercel prod
+has a random override (`0AiG4ad1gFTsH6BL8NvKhYoSIPXmx2CV`).**
 
 ---
 
