@@ -195,9 +195,15 @@ export class MemoryStore {
       evaluatedAt: string;
     },
   ): Promise<void> {
-    const id = crypto.randomUUID();
-    this.evaluations.set(id, {
-      id,
+    let existingId: string | null = null;
+    for (const ev of this.evaluations.values()) {
+      if (ev.agent_id === agentId && ev.url === e.url) {
+        existingId = ev.id;
+        break;
+      }
+    }
+    const row = {
+      id: existingId ?? crypto.randomUUID(),
       agent_id: agentId,
       topic_id: e.topicId,
       title: e.title,
@@ -208,7 +214,8 @@ export class MemoryStore {
       selected_why: e.selectedWhy,
       selected_why_now: e.selectedWhyNow,
       evaluated_at: e.evaluatedAt,
-    });
+    };
+    this.evaluations.set(row.id, row);
   }
 
   async insertPost(agentId: string, post: Post): Promise<void> {
@@ -442,7 +449,13 @@ export async function insertEvaluation(
 ): Promise<void> {
   if (!supabaseConfigured()) return getStore().insertEvaluation(agentId, e);
   const db = getClient();
-  const { error } = await db.from("evaluations").insert({
+  const { data: existing } = await db
+    .from("evaluations")
+    .select("id")
+    .eq("agent_id", agentId)
+    .eq("url", e.url)
+    .maybeSingle();
+  const payload = {
     agent_id: agentId,
     topic_id: e.topicId,
     title: e.title,
@@ -453,8 +466,14 @@ export async function insertEvaluation(
     selected_why: e.selectedWhy,
     selected_why_now: e.selectedWhyNow,
     evaluated_at: e.evaluatedAt,
-  });
-  if (error) throw new Error(`insertEvaluation failed: ${error.message}`);
+  };
+  if (existing?.id) {
+    const { error } = await db.from("evaluations").update(payload).eq("id", existing.id);
+    if (error) throw new Error(`insertEvaluation update failed: ${error.message}`);
+  } else {
+    const { error } = await db.from("evaluations").insert(payload);
+    if (error) throw new Error(`insertEvaluation failed: ${error.message}`);
+  }
 }
 
 export async function markEvaluationAccepted(
@@ -535,7 +554,8 @@ export async function getSeenKeys(agentId: string): Promise<Set<string>> {
   const { data: evals, error: evalError } = await db
     .from("evaluations")
     .select("url")
-    .eq("agent_id", agentId);
+    .eq("agent_id", agentId)
+    .eq("accepted", true);
   if (evalError) throw new Error(`getSeenKeys evaluations failed: ${evalError.message}`);
   for (const r of evals ?? []) {
     if (r.url) {
