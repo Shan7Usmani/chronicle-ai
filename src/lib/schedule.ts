@@ -3,6 +3,8 @@ import { env } from "@/lib/config";
 
 const WINDOW_MS = 48 * 60 * 60 * 1000;
 const MIN_GAP_MS = 90 * 60 * 1000;
+const SLOT_COUNT_MIN = 22;
+const SLOT_COUNT_MAX = 24;
 
 function hashSeed(value: string): number {
   let h = 2166136261;
@@ -26,7 +28,7 @@ function mulberry32(seed: number) {
 
 export function buildSchedule(agentId: string, fromMs: number = Date.now()): PublishSlot[] {
   const rand = mulberry32(hashSeed(agentId));
-  const count = 12 + Math.floor(rand() * 3);
+  const count = SLOT_COUNT_MIN + Math.floor(rand() * (SLOT_COUNT_MAX - SLOT_COUNT_MIN + 1));
   const times: number[] = [];
 
   const end = fromMs + WINDOW_MS;

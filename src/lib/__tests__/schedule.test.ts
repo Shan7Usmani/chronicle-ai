@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { buildSchedule, getNextPendingSlot, isDueSlot } from "@/lib/schedule";
 
 describe("buildSchedule", () => {
-  it("seeds 12-14 slots across a 48h window", () => {
+  it("seeds 22-24 slots across a 48h window", () => {
     const schedule = buildSchedule("abc-123", Date.parse("2026-08-07T00:00:00Z"));
-    expect(schedule.length).toBeGreaterThanOrEqual(12);
-    expect(schedule.length).toBeLessThanOrEqual(14);
+    expect(schedule.length).toBeGreaterThanOrEqual(22);
+    expect(schedule.length).toBeLessThanOrEqual(24);
     expect(schedule.every((s) => s.state === "pending")).toBe(true);
   });
 
