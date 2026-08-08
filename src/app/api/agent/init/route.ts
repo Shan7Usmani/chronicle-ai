@@ -7,7 +7,8 @@ export async function POST(req: Request) {
   let body: { persona?: { name?: string; domain?: string } } = {};
   if (req.body) {
     try {
-      body = await req.json();
+      const raw = await req.text();
+      if (raw.trim()) body = JSON.parse(raw);
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
