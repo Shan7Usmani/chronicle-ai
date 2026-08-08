@@ -13,7 +13,7 @@
 | E2 | Valid repo URL | ✅ | https://github.com/Shan7Usmani/chronicle-ai |
 | E3 | Working live app | ✅ | **Deployed** https://chronicle-ai-one.vercel.app — 200, landing + all 4 API routes live (verified 2026-08-09) |
 | E4 | PROMPTS.md in repo | ✅ | `PROMPTS.md` present; build-agent + QA prompts all logged |
-| E5 | Registered team | ⬜ (user) | |
+| E5 | Registered team | ✅ | User confirmed registration on Vicodathon (2026-08-09) — pending actual submission of repo + demo URLs |
 | E6 | Pre-deadline | ✅ | ~19h remain (deadline Sun Aug 9 20:00 IST) |
 | A1 | Repo created during hackathon | ✅ | Scaffold committed Aug 7 (`a6e697e`) |
 | A2 | First commit = bare scaffold | ✅ | `a6e697e` contains only create-next-app files |
