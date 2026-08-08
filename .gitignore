@@ -49,3 +49,5 @@ dev.err
 # local smoke-test artifacts
 agentid.txt
 feed_check.json
+
+.vercel

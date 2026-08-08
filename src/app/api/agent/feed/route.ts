@@ -22,7 +22,12 @@ export async function GET(req: Request) {
 
   const agent = await getAgent(agentId);
   if (!agent) {
-    return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    return NextResponse.json({ posts: [] }, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "no-store",
+      },
+    });
   }
 
   if (isDueSlot(agent.schedule, Date.now())) {

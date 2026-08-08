@@ -50,6 +50,32 @@ recovered a scaffolding collision with the build agent's working tree.
 | 9 | ~21:55 | agent → CLI | `npm install zod@4.4.3 @supabase/supabase-js@2.112.2 rss-parser@3.13.0` (restore build agent's deps at installed versions) | package.json + package-lock.json restored |
 | 10 | ~21:56 | agent → files | Wrote `PROMPTS.md` (this log), `RULES.md`, `VERIFICATION_TRACKER.md`; QA audit of build agent's `src/lib/**`, `src/app/api/**`, `supabase/migrations/00001_init.sql`. | Enforcement + QA artifacts; findings documented |
 
+### 2026-08-09 — QA / Rules-enforcement agent (opencode, session "Vicodathon")
+
+**Role in this project:** rules enforcement + quality assurance over the build
+agent; made the app submission-ready (deploy path, spec compliance, gates).
+
+| # | Time (IST) | Tool | Prompt (faithful) | Produced |
+|---|-----------|------|-------------------|----------|
+| 1 | ~00:30 | user → agent | "shall we continue what we were doing in this folder" | Reviewed git log, RULES.md, PROMPTS.md, VERIFICATION_TRACKER.md; assessed state |
+| 2 | ~00:32 | user → agent | "yes make it completely functional so that i can win" | Full QA pass: tsc/lint/build/tests, identified remaining gaps (deploy, C3, prompts log) |
+| 3 | ~00:36 | agent → CLI | `npm test`, `npx tsc --noEmit`, `npm run lint`, `npm run build` | All gates pass except schedule test failed: `BASE_URL` env collision |
+| 4 | ~00:37 | agent → CLI | `node -e` env probe, vitest debug test, registry env checks | Root cause: Vite/Vitest injects built-in `BASE_URL="/"` which failed the zod `.url()` schema |
+| 5 | ~00:40 | agent → files | Renamed config var `BASE_URL` → `SITE_URL` in `src/lib/config.ts` + `.env.example` | Env collision fixed |
+| 6 | ~00:41 | agent → files | `!.env.example` added to `.gitignore` | `.env.example` now committed (was ignored by `.env*`) |
+| 7 | ~00:42 | agent → files | Updated `VERIFICATION_TRACKER.md` (F3/F4/F5 fixed; E1/E2 verified; gates green) | Tracker reflects verified state |
+| 8 | ~00:44 | agent → CLI | `git commit -m "qa: track F3/F4/F5 fixed; rename BASE_URL to SITE_URL..." && git push` | Commit `9e57330` pushed |
+| 9 | ~00:50 | user → agent | "yes make it completely functional so that i can win" (continue) | Smoke test plan: run dev server, init → feed over time |
+| 10 | ~00:52 | agent → CLI | Started `next dev` with `PUBLISH_FIRST_SLOT_MIN=0.5` + `LLM_PROVIDER=simulation` | Local server up |
+| 11 | ~00:55 | agent → CLI | `POST /api/agent/init` → saved id; polled `/api/agent/feed` + `/api/agent/status` | Init OK; feed empty until slot due; schedule verified (12 slots / 48h) |
+| 12 | ~01:00 | agent → CLI | Waited ~100s, polled feed again | **Auto-published post** with title/text/rationale/sources/editorialScore — F5 confirmed live |
+| 13 | ~01:01 | agent → CLI | Re-polled feed + status | Append-only + idempotent (1 post, totalRuns=1) |
+| 14 | ~01:03 | agent → files | Feed route: unknown agentId → `{posts:[]}` instead of 404 (spec-safe, C3 decision) | `src/app/api/agent/feed/route.ts` |
+| 15 | ~01:04 | agent → files | `PUBLISH_FIRST_SLOT_MIN` default 15 → 1 (first post within ~1-2 min for demo) | `src/lib/config.ts`, `.env.example` |
+| 16 | ~01:10 | agent → CLI | `vercel link --project chronicle-ai` | Repo linked to Vercel project + GitHub connection |
+| 17 | ~01:12 | agent → files | Rewrote `README.md` (project-specific, quickstart, API contract, architecture, deploy) | README (was stock create-next-app) |
+| 18 | ~01:15 | agent → user | Supabase setup instructions (create project, run SQL, get URL + service_role key) | Awaiting credentials from user |
+
 **Prompts still to be logged (required before submission):**
 - Every prompt used by the **build agent** (the session that wrote
   `src/lib/**`, `src/app/api/agent/*`, `supabase/migrations/00001_init.sql`,
@@ -76,3 +102,6 @@ table updated so every shipped feature has at least one logged prompt:
 | LLM writing (Gemini/Groq/simulation) | `src/lib/llm.ts`, `src/lib/agents/writer.ts` | *(to be logged)* |
 | Persistence (Supabase + in-memory fallback) | `src/lib/db.ts`, `supabase/migrations/00001_init.sql` | *(to be logged)* |
 | Env/config validation | `src/lib/config.ts`, `.env.example` | *(to be logged)* |
+| Landing page + live feed UI | `src/app/page.tsx`, `src/components/live-feed.tsx` | *(to be logged)* |
+| Feed self-trigger (F5 fix) | `src/app/api/agent/feed/route.ts`, `src/lib/agents/pipeline.ts` | #12, #14 |
+| Env collision fix (BASE_URL→SITE_URL) | `src/lib/config.ts` | #4, #5 |

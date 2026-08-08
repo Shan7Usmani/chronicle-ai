@@ -11,7 +11,7 @@ const envSchema = z.object({
   AGENT_SECRET: z.string().default("chronicle-dev-secret"),
   SITE_URL: z.string().url().optional(),
   MAX_POSTS_PER_TICK: z.coerce.number().int().min(1).max(5).default(2),
-  PUBLISH_FIRST_SLOT_MIN: z.coerce.number().min(0).max(120).default(15),
+  PUBLISH_FIRST_SLOT_MIN: z.coerce.number().min(0).max(120).default(1),
 });
 
 const parsed = envSchema.safeParse(process.env);
