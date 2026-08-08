@@ -159,11 +159,12 @@ export async function runAgentTick(agentId?: string): Promise<TickResult>;
 - Do NOT run any generation here (10s function cap). Fast, DB-only.
 
 `GET /api/agent/feed?agentId=<id>`:
-- Missing agentId → 400 `{ error: "agentId query param required" }`.
-- Unknown agent → 404 `{ error: "Agent not found" }`.
-- Returns `{ posts: Post[] }` with ONLY the fields the brief requires on each post: `{ id, createdAt, text, rationale, sources }` (order the full Post to that subset). Newest first. Empty → `{ posts: [] }`.
-- Headers: `Access-Control-Allow-Origin: *`, `Cache-Control: public, max-age=60`.
-- No LLM calls, storage read only.
+- `agentId` optional. If omitted → resolves to the **primary agent** (most recently created), so the public landing feed always shows the active creator.
+- Unknown agent → `{ posts: [] }`.
+- Returns `{ agentId, posts: Post[] }` with ONLY the fields the brief requires on each post: `{ id, createdAt, text, rationale, sources }` (order the full Post to that subset). Newest first. Empty → `{ posts: [] }`.
+- Headers: `Access-Control-Allow-Origin: *`, `Cache-Control: no-store`.
+- If the agent's next schedule slot is due, the GET self-triggers one publish cycle (F5) before reading posts.
+- Storage read only.
 
 `POST /api/agent/tick`:
 - Guard: header `x-agent-secret` === `env.AGENT_SECRET` else 401 `{ error: "Unauthorized" }`.
@@ -172,6 +173,7 @@ export async function runAgentTick(agentId?: string): Promise<TickResult>;
 - `export const maxDuration = 60;`
 
 `GET /api/agent/status?agentId=<id>`:
+- `agentId` optional. If omitted → resolves to the **primary agent** (most recently created).
 - Returns `{ status: AgentStatus, recentPosts: Post[], recentRejections: RejectedTopic[] }`. For dashboard.
 - CORS `*`. No LLM.
 
