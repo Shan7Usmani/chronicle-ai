@@ -1,9 +1,10 @@
 -- 00001_init.sql — Chronicle AI initial schema
--- Hackathon-friendly: permissive RLS for service_role + authenticated.
+-- Hackathon-friendly: permissive RLS for anon (publishable key), service_role, authenticated.
+-- Idempotent: safe to re-run in the SQL editor (uses IF NOT EXISTS / OR REPLACE).
 
 create extension if not exists pgcrypto;
 
-create table public.agents (
+create table if not exists public.agents (
   id text primary key,
   persona jsonb not null,
   created_at timestamptz not null default now(),
@@ -13,7 +14,7 @@ create table public.agents (
   total_runs int not null default 0
 );
 
-create table public.topics (
+create table if not exists public.topics (
   id uuid primary key default gen_random_uuid(),
   agent_id text not null references public.agents(id) on delete cascade,
   title text,
@@ -27,7 +28,7 @@ create table public.topics (
   unique (agent_id, url)
 );
 
-create table public.evaluations (
+create table if not exists public.evaluations (
   id uuid primary key default gen_random_uuid(),
   agent_id text not null references public.agents(id) on delete cascade,
   topic_id uuid references public.topics(id) on delete cascade,
@@ -41,7 +42,7 @@ create table public.evaluations (
   evaluated_at timestamptz not null default now()
 );
 
-create table public.posts (
+create table if not exists public.posts (
   id text primary key,
   agent_id text not null references public.agents(id) on delete cascade,
   title text,
@@ -53,28 +54,32 @@ create table public.posts (
   created_at timestamptz not null default now()
 );
 
-create index idx_agents_created_at on public.agents (created_at desc);
-create index idx_posts_agent_created on public.posts (agent_id, created_at desc);
-create index idx_evaluations_agent_evaluated on public.evaluations (agent_id, evaluated_at desc);
-create index idx_topics_agent_url on public.topics (agent_id, url);
+create index if not exists idx_agents_created_at on public.agents (created_at desc);
+create index if not exists idx_posts_agent_created on public.posts (agent_id, created_at desc);
+create index if not exists idx_evaluations_agent_evaluated on public.evaluations (agent_id, evaluated_at desc);
+create index if not exists idx_topics_agent_url on public.topics (agent_id, url);
 
 alter table public.agents enable row level security;
 alter table public.topics enable row level security;
 alter table public.evaluations enable row level security;
 alter table public.posts enable row level security;
 
-create policy "agents_all_service_role" on public.agents
-  for all to service_role, authenticated
+drop policy if exists "agents_all" on public.agents;
+create policy "agents_all" on public.agents
+  for all to anon, service_role, authenticated
   using (true) with check (true);
 
-create policy "topics_all_service_role" on public.topics
-  for all to service_role, authenticated
+drop policy if exists "topics_all" on public.topics;
+create policy "topics_all" on public.topics
+  for all to anon, service_role, authenticated
   using (true) with check (true);
 
-create policy "evaluations_all_service_role" on public.evaluations
-  for all to service_role, authenticated
+drop policy if exists "evaluations_all" on public.evaluations;
+create policy "evaluations_all" on public.evaluations
+  for all to anon, service_role, authenticated
   using (true) with check (true);
 
-create policy "posts_all_service_role" on public.posts
-  for all to service_role, authenticated
+drop policy if exists "posts_all" on public.posts;
+create policy "posts_all" on public.posts
+  for all to anon, service_role, authenticated
   using (true) with check (true);
