@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Post } from "@/lib/types";
-import { getAgent, listPosts } from "@/lib/db";
+import { getAgent, getPrimaryAgent, listPosts } from "@/lib/db";
 import { isDueSlot } from "@/lib/schedule";
 import { runAgentTick } from "@/lib/agents/pipeline";
 
@@ -14,14 +14,14 @@ export const maxDuration = 60;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const agentId = searchParams.get("agentId");
+  const requestedAgentId = searchParams.get("agentId");
+
+  const agent = requestedAgentId
+    ? await getAgent(requestedAgentId)
+    : await getPrimaryAgent();
+  const agentId = agent?.id ?? requestedAgentId;
 
   if (!agentId) {
-    return NextResponse.json({ error: "agentId query param required" }, { status: 400 });
-  }
-
-  const agent = await getAgent(agentId);
-  if (!agent) {
     return NextResponse.json({ posts: [] }, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     });
   }
 
-  if (isDueSlot(agent.schedule, Date.now())) {
+  if (agent && isDueSlot(agent.schedule, Date.now())) {
     await runAgentTick(agentId);
   }
 
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
     editorialScore: p.editorialScore,
   }));
 
-  return NextResponse.json({ posts: feed }, {
+  return NextResponse.json({ agentId, posts: feed }, {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "no-store",

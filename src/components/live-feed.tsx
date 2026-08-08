@@ -48,35 +48,18 @@ export default function LiveFeed() {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    const ensureAgent = agentId
-      ? Promise.resolve(agentId)
-      : fetch("/api/agent/init", { method: "POST" })
-          .then((r) => r.json())
-          .then((init) => {
-            const id = init.agentId ?? init.agent?.id;
-            if (!id) throw new Error(init.error ?? "init failed");
-            setAgentId(id);
-            return id;
-          });
-
-    ensureAgent
-      .then((id) =>
-        Promise.all([
-          fetch(`/api/agent/feed?agentId=${encodeURIComponent(id)}`).then((r) =>
-            r.json(),
-          ),
-          fetch(
-            `/api/agent/status?agentId=${encodeURIComponent(id)}`,
-          ).then((r) => r.json()),
-        ]),
-      )
+    Promise.all([
+      fetch("/api/agent/feed").then((r) => r.json()),
+      fetch("/api/agent/status").then((r) => r.json()),
+    ])
       .then(([feed, st]) => {
         setPosts(feed.posts ?? []);
-        setStatus(st.agent ?? st);
+        setAgentId(feed.agentId ?? st.status?.agentId ?? null);
+        setStatus(st.status ?? null);
         setError(null);
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
-  }, [agentId]);
+  }, []);
 
   useEffect(() => {
     refresh();

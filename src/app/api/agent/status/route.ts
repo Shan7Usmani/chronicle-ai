@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { getAgent, getStatus, listPosts, listRejections } from "@/lib/db";
+import { getAgent, getPrimaryAgent, getStatus, listPosts, listRejections } from "@/lib/db";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const agentId = searchParams.get("agentId");
+  const requestedAgentId = searchParams.get("agentId");
+
+  const agent = requestedAgentId
+    ? await getAgent(requestedAgentId)
+    : await getPrimaryAgent();
+  const agentId = agent?.id ?? requestedAgentId;
 
   if (!agentId) {
-    return NextResponse.json({ error: "agentId query param required" }, { status: 400 });
-  }
-
-  const agent = await getAgent(agentId);
-  if (!agent) {
-    return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    return NextResponse.json({ error: "No agent yet" }, { status: 404 });
   }
 
   const [status, posts, recentRejections] = await Promise.all([

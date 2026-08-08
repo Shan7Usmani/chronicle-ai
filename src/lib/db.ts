@@ -146,6 +146,14 @@ export class MemoryStore {
     return row ? rowToAgent(row) : null;
   }
 
+  async getPrimaryAgent(): Promise<AgentRecord | null> {
+    let latest: AgentRow | null = null;
+    for (const a of this.agents.values()) {
+      if (!latest || a.created_at > latest.created_at) latest = a;
+    }
+    return latest ? rowToAgent(latest) : null;
+  }
+
   async updateAgentRun(
     agentId: string,
     run: { lastRunAt: string; nextRunAt: string | null; totalRuns: number },
@@ -345,6 +353,19 @@ export async function getAgent(agentId: string): Promise<AgentRecord | null> {
   const db = getClient();
   const { data, error } = await db.from("agents").select("*").eq("id", agentId).maybeSingle();
   if (error) throw new Error(`getAgent failed: ${error.message}`);
+  return data ? rowToAgent(data as AgentRow) : null;
+}
+
+export async function getPrimaryAgent(): Promise<AgentRecord | null> {
+  if (!supabaseConfigured()) return getStore().getPrimaryAgent();
+  const db = getClient();
+  const { data, error } = await db
+    .from("agents")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`getPrimaryAgent failed: ${error.message}`);
   return data ? rowToAgent(data as AgentRow) : null;
 }
 
