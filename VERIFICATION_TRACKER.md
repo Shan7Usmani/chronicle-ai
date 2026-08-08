@@ -12,14 +12,14 @@
 | E1 | Public repo | ✅ | `Shan7Usmani/chronicle-ai` — PUBLIC (`gh repo view`) |
 | E2 | Valid repo URL | ✅ | https://github.com/Shan7Usmani/chronicle-ai |
 | E3 | Working live app | ✅ | **Deployed** https://chronicle-ai-one.vercel.app — 200, landing + all 4 API routes live (verified 2026-08-09) |
-| E4 | PROMPTS.md in repo | ✅ CREATED | `PROMPTS.md` present; build-agent prompts still to be appended |
+| E4 | PROMPTS.md in repo | ✅ | `PROMPTS.md` present; build-agent + QA prompts all logged |
 | E5 | Registered team | ⬜ (user) | |
 | E6 | Pre-deadline | ✅ | ~19h remain (deadline Sun Aug 9 20:00 IST) |
 | A1 | Repo created during hackathon | ✅ | Scaffold committed Aug 7 (`a6e697e`) |
 | A2 | First commit = bare scaffold | ✅ | `a6e697e` contains only create-next-app files |
 | A3 | Incremental commits | ✅ | 7 commits, each meaningful: scaffold → core engine → db → tests → QA docs → smoke ignore → UI |
-| A4 | PROMPTS.md ↔ features | ⚠️ | Build-agent prompts not yet logged |
-| A5 | Complete prompt history | ⚠️ | Same |
+| A4 | PROMPTS.md ↔ features | ✅ | Build-agent prompts logged (faithful reconstruction, commit hashes) + full feature-mapping table filled (commit `26c6bda`) |
+| A5 | Complete prompt history | ✅ | Build agent (6) + QA Aug 7 (10) + QA Aug 9 (22) + deployment/smoke-test prompts all logged |
 | A6 | No secrets committed | ✅ | `.env*` gitignored; no keys in tree (verify at end) |
 | F1 | Live topic discovery | ✅ BUILT | `src/lib/sources/index.ts` — HN, Lobsters, Google News, THN; 8s timeouts; graceful per-source failure |
 | F2 | Editorial judgment | ✅ BUILT | `scoring.ts` — affinity, credibility, richness, recency, hype penalty; threshold 55; rejections persisted |
@@ -69,11 +69,10 @@ matching the spec's empty-state shape. Live-verified on prod.
 `AGENT_SECRET` set. Landing + all 4 API routes live. Auto-deploys from `master`.
 
 ### A4/A5 (HIGH) — build-agent prompts not yet logged in PROMPTS.md
-The QA session (Aug 7) is logged. Every prompt from the **build agent** session that
-wrote `src/lib/**`, `src/app/api/agent/*`, `supabase/migrations/00001_init.sql`,
-`docs/CONTRACTS.md`, `.env.example`, the UI (`page.tsx`, `live-feed.tsx`) must be
-appended with tool + produced-files + feature mapping. Stage 2 cross-checks this.
-**Still TODO — needs the build-agent prompt history.**
+**RESOLVED 2026-08-09.** Build-agent session logged (6 prompts, faithful
+reconstruction from commit hashes + file stats) and the Feature → Prompt Mapping
+table fully filled. QA Aug 9 section extended to 22 entries (incl. deploy +
+live smoke-test prompts). Commit `26c6bda`.
 
 ### Q5 (HIGH) — contract smoke test not yet run
 **DONE 2026-08-09 (live on prod).** init → auto-published first post ~90s later via
