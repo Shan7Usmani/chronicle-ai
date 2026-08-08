@@ -32,17 +32,16 @@ export function buildSchedule(agentId: string, fromMs: number = Date.now()): Pub
   const end = fromMs + WINDOW_MS;
   const jitterRange = Math.min(10, Math.max(1, env.PUBLISH_FIRST_SLOT_MIN));
   const firstOffset = (env.PUBLISH_FIRST_SLOT_MIN + rand() * jitterRange) * 60 * 1000;
-  let prev = fromMs + firstOffset;
-  times.push(prev);
+  const first = fromMs + firstOffset;
+  times.push(first);
 
+  const spacing = (end - first) / (count - 1);
   for (let i = 1; i < count; i++) {
-    const remaining = count - i;
-    const target = end - remaining * MIN_GAP_MS;
-    const usable = target - prev;
-    const jitter = usable * (0.5 + rand() * 0.4);
-    const slot = Math.min(prev + MIN_GAP_MS + jitter, target);
+    const jitter = spacing * (rand() - 0.5) * 0.4;
+    let slot = first + spacing * i + jitter;
+    if (slot - times[i - 1] < MIN_GAP_MS) slot = times[i - 1] + MIN_GAP_MS;
+    if (slot > end) slot = end;
     times.push(slot);
-    prev = slot;
   }
 
   return times.map((at) => ({
