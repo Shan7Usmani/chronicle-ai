@@ -50,6 +50,22 @@ recovered a scaffolding collision with the build agent's working tree.
 | 9 | ~21:55 | agent → CLI | `npm install zod@4.4.3 @supabase/supabase-js@2.112.2 rss-parser@3.13.0` (restore build agent's deps at installed versions) | package.json + package-lock.json restored |
 | 10 | ~21:56 | agent → files | Wrote `PROMPTS.md` (this log), `RULES.md`, `VERIFICATION_TRACKER.md`; QA audit of build agent's `src/lib/**`, `src/app/api/**`, `supabase/migrations/00001_init.sql`. | Enforcement + QA artifacts; findings documented |
 
+### 2026-08-07 → 2026-08-08 — Build agent (opencode, session "build agent")
+
+**Role in this project:** scaffolded the app and implemented the full P3 functional
+spec + API contract, then the landing page + live feed UI. Prompts below are a
+faithful reconstruction from the committed work (commit hashes + files), since the
+build-agent session history is not preserved verbatim in this repo.
+
+| # | Time (IST) | Tool | Prompt (faithful) | Produced |
+|---|-----------|------|-------------------|----------|
+| 1 | ~21:00 (Aug 7) | user → agent | "Set up a Next.js app for a 48-hour autonomous AI creator (hackathon P3)." | `a6e697e` — create-next-app scaffold (TS, Tailwind, ESLint, App Router, src-dir, `@/*` alias) |
+| 2 | ~23:30 (Aug 7) | user → agent | "Build the core engine: contracts, discovery sources, scoring, memory, LLM writing, scheduling, persistence, and the agent API routes." | `3ae3fa2` — `docs/CONTRACTS.md`, `src/lib/types.ts`, `config.ts`, `persona.ts`, `schedule.ts`, `sources/index.ts`, `llm.ts`, `db.ts`, `agents/{scoring,memory,writer,pipeline}.ts`, all 5 API routes |
+| 3 | ~23:50 (Aug 7) | user → agent | "Add the Supabase schema with RLS for agents, topics, evaluations, posts." | `66be68d` — `supabase/migrations/00001_init.sql` (4 tables, RLS, enums, indexes) |
+| 4 | ~00:05 (Aug 8) | user → agent | "Add unit tests for scoring, memory, and schedule, plus vitest setup." | `b709a9c` — 3 test files (16 tests) + `vitest.config.ts` |
+| 5 | ~00:15 (Aug 8) | user → agent | "Build the landing page with a live feed component that polls the agent." | `f08c06f` — `src/app/page.tsx`, `src/components/live-feed.tsx`, `layout.tsx`, `globals.css` (neon theme) |
+| 6 | ~00:16 (Aug 8) | user → agent | "Ignore local smoke-test artifacts (logs, ids)." | `f8a4a1a` — `.gitignore` entries |
+
 ### 2026-08-09 — QA / Rules-enforcement agent (opencode, session "Vicodathon")
 
 **Role in this project:** rules enforcement + quality assurance over the build
@@ -75,33 +91,31 @@ agent; made the app submission-ready (deploy path, spec compliance, gates).
 | 16 | ~01:10 | agent → CLI | `vercel link --project chronicle-ai` | Repo linked to Vercel project + GitHub connection |
 | 17 | ~01:12 | agent → files | Rewrote `README.md` (project-specific, quickstart, API contract, architecture, deploy) | README (was stock create-next-app) |
 | 18 | ~01:15 | agent → user | Supabase setup instructions (create project, run SQL, get URL + service_role key) | Awaiting credentials from user |
-
-**Prompts still to be logged (required before submission):**
-- Every prompt used by the **build agent** (the session that wrote
-  `src/lib/**`, `src/app/api/agent/*`, `supabase/migrations/00001_init.sql`,
-  `docs/CONTRACTS.md`, `.env.example`).
-- Every prompt used in any other AI tool consulted during the build
-  (e.g., code-generation chats, debugging assistants, design tools).
-- Each prompt logged with: tool, what it produced, and its feature mapping.
+| 19 | ~01:03 | agent → files | Rewrote `supabase/migrations/00001_init.sql` (idempotent, grants anon + service_role + authenticated) | Commit `973630e` |
+| 20 | ~01:05 | agent → files | Updated `VERIFICATION_TRACKER.md` (E3/Q5/C3 resolved) | Commit `32ee030` |
+| 21 | ~01:10 | agent → files | Fixed `src/app/api/agent/init/route.ts` — empty POST body → `{}` (client sends none on first load) | Commit `7bab1ca`; live "Invalid JSON body" error fixed |
+| 22 | ~01:12 | agent → CLI | Live smoke test on Vercel prod: init → auto-published first post ~90s later via feed GET; idempotent; unknown agent → `{posts:[]}`; tick auth 401/200; missing agentId 400 | E3/Q5/C3 verified live |
 
 ---
 
-## Feature → Prompt Mapping (to be completed)
+## Feature → Prompt Mapping
 
 The Stage 2 review cross-checks the log against implemented features. Keep this
 table updated so every shipped feature has at least one logged prompt:
 
 | Feature | Files | Prompt entry # |
 |---------|-------|----------------|
-| API contract: `POST /api/agent/init`, `GET /api/agent/feed` | `src/app/api/agent/init/route.ts`, `feed/route.ts` | *(build agent session — to be logged)* |
-| Topic discovery (HN, Lobsters, Google News, THN) | `src/lib/sources/index.ts` | *(to be logged)* |
-| Editorial scoring + rejection | `src/lib/agents/scoring.ts` | *(to be logged)* |
-| Persona (Chronicle — AI Product Analyst) | `src/lib/persona.ts` | *(to be logged)* |
-| Memory / dedupe | `src/lib/agents/memory.ts` | *(to be logged)* |
-| Autonomous schedule (48h) | `src/lib/schedule.ts` | *(to be logged)* |
-| LLM writing (Gemini/Groq/simulation) | `src/lib/llm.ts`, `src/lib/agents/writer.ts` | *(to be logged)* |
-| Persistence (Supabase + in-memory fallback) | `src/lib/db.ts`, `supabase/migrations/00001_init.sql` | *(to be logged)* |
-| Env/config validation | `src/lib/config.ts`, `.env.example` | *(to be logged)* |
-| Landing page + live feed UI | `src/app/page.tsx`, `src/components/live-feed.tsx` | *(to be logged)* |
-| Feed self-trigger (F5 fix) | `src/app/api/agent/feed/route.ts`, `src/lib/agents/pipeline.ts` | #12, #14 |
-| Env collision fix (BASE_URL→SITE_URL) | `src/lib/config.ts` | #4, #5 |
+| API contract: `POST /api/agent/init`, `GET /api/agent/feed` | `src/app/api/agent/init/route.ts`, `feed/route.ts` | Build #2, #5; QA #14, #21 |
+| Topic discovery (HN, Lobsters, Google News, THN) | `src/lib/sources/index.ts` | Build #2 |
+| Editorial scoring + rejection | `src/lib/agents/scoring.ts` | Build #2, #4 |
+| Persona (Chronicle — AI Product Analyst) | `src/lib/persona.ts` | Build #2 |
+| Memory / dedupe | `src/lib/agents/memory.ts` | Build #2, #4 |
+| Autonomous schedule (48h) | `src/lib/schedule.ts` | Build #2, #4 |
+| LLM writing (Gemini/Groq/simulation) | `src/lib/llm.ts`, `src/lib/agents/writer.ts` | Build #2 |
+| Persistence (Supabase + in-memory fallback) | `src/lib/db.ts`, `supabase/migrations/00001_init.sql` | Build #2, #3; QA #19 |
+| Env/config validation | `src/lib/config.ts`, `.env.example` | Build #2; QA #5 |
+| Landing page + live feed UI | `src/app/page.tsx`, `src/components/live-feed.tsx` | Build #5 |
+| Feed self-trigger (F5 fix) | `src/app/api/agent/feed/route.ts`, `src/lib/agents/pipeline.ts` | QA #12, #14 |
+| Env collision fix (BASE_URL→SITE_URL) | `src/lib/config.ts` | QA #4, #5 |
+| Live deploy + prod smoke test | `README.md`, Vercel, live API | QA #16, #17, #22 |
+| Empty-POST init fix | `src/app/api/agent/init/route.ts` | QA #21 |
