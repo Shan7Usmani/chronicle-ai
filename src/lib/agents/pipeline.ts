@@ -13,6 +13,7 @@ import {
   insertEvaluation,
   insertPost,
   insertTopic,
+  markEvaluationAccepted,
   markSlotPublished,
   updateAgentRun,
 } from "@/lib/db";
@@ -138,11 +139,29 @@ export async function runAgentTick(agentId?: string): Promise<TickResult> {
     }
 
     const shortlist: { story: SourceStory; editorial: EditorialDecision }[] = [];
+    const belowBar: { story: SourceStory; editorial: EditorialDecision }[] = [];
 
     for (const { story, editorial } of scored) {
       try {
         const topicId = await insertTopic(resolvedId, story);
         result.evaluated += 1;
+
+        const dup = isDuplicate(story, seen);
+        if (dup.duplicate) {
+          await insertEvaluation(resolvedId, {
+            topicId,
+            title: story.title,
+            url: story.url,
+            score: editorial.score,
+            accepted: false,
+            reasons: dup.reason ? [dup.reason] : ["Duplicate"],
+            selectedWhy: null,
+            selectedWhyNow: null,
+            evaluatedAt: ranAt,
+          });
+          result.skippedDuplicate += 1;
+          continue;
+        }
 
         if (!editorial.accepted) {
           await insertEvaluation(resolvedId, {
@@ -169,23 +188,7 @@ export async function runAgentTick(agentId?: string): Promise<TickResult> {
             });
           }
           result.rejected += 1;
-          continue;
-        }
-
-        const dup = isDuplicate(story, seen);
-        if (dup.duplicate) {
-          await insertEvaluation(resolvedId, {
-            topicId,
-            title: story.title,
-            url: story.url,
-            score: editorial.score,
-            accepted: false,
-            reasons: dup.reason ? [dup.reason] : ["Duplicate"],
-            selectedWhy: null,
-            selectedWhyNow: null,
-            evaluatedAt: ranAt,
-          });
-          result.skippedDuplicate += 1;
+          belowBar.push({ story, editorial });
           continue;
         }
 
@@ -212,7 +215,14 @@ export async function runAgentTick(agentId?: string): Promise<TickResult> {
       .filter((s) => s.state === "pending" && new Date(s.at).getTime() <= nowMs)
       .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
 
-    const winners = shortlist.slice(0, Math.min(env.MAX_POSTS_PER_TICK, dueSlots.length));
+    let pool = shortlist;
+    let usedFallback = false;
+    if (dueSlots.length > 0 && pool.length === 0 && belowBar.length > 0) {
+      pool = [belowBar[0]];
+      usedFallback = true;
+    }
+
+    const winners = pool.slice(0, Math.min(env.MAX_POSTS_PER_TICK, dueSlots.length));
 
     for (const winner of winners) {
       let post: Post;
@@ -227,6 +237,17 @@ export async function runAgentTick(agentId?: string): Promise<TickResult> {
         continue;
       }
       post.agentId = resolvedId;
+      if (usedFallback) {
+        try {
+          await markEvaluationAccepted(
+            resolvedId,
+            winner.story.url,
+            "Promoted as best available to fill scheduled slot",
+          );
+        } catch (err) {
+          console.error("[pipeline] markEvaluationAccepted failed:", err);
+        }
+      }
       try {
         await insertPost(resolvedId, post);
       } catch (err) {

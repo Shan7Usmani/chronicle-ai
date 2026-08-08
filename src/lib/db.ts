@@ -225,6 +225,15 @@ export class MemoryStore {
     });
   }
 
+  async markEvaluationAccepted(agentId: string, url: string, promotedReason: string): Promise<void> {
+    for (const ev of this.evaluations.values()) {
+      if (ev.agent_id === agentId && ev.url === url) {
+        ev.accepted = true;
+        ev.reasons = [promotedReason];
+      }
+    }
+  }
+
   async listPosts(agentId: string): Promise<Post[]> {
     return Array.from(this.posts.values())
       .filter((p) => p.agent_id === agentId)
@@ -446,6 +455,21 @@ export async function insertEvaluation(
     evaluated_at: e.evaluatedAt,
   });
   if (error) throw new Error(`insertEvaluation failed: ${error.message}`);
+}
+
+export async function markEvaluationAccepted(
+  agentId: string,
+  url: string,
+  promotedReason: string,
+): Promise<void> {
+  if (!supabaseConfigured()) return getStore().markEvaluationAccepted(agentId, url, promotedReason);
+  const db = getClient();
+  const { error } = await db
+    .from("evaluations")
+    .update({ accepted: true, reasons: [promotedReason] })
+    .eq("agent_id", agentId)
+    .eq("url", url);
+  if (error) throw new Error(`markEvaluationAccepted failed: ${error.message}`);
 }
 
 export async function insertPost(agentId: string, post: Post): Promise<void> {
