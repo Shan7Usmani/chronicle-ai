@@ -311,6 +311,15 @@ export class MemoryStore {
       }
     }
   }
+
+  async rebuildSchedule(agentId: string): Promise<PublishSlot[]> {
+    const row = this.agents.get(agentId);
+    if (!row) throw new Error(`rebuildSchedule: agent ${agentId} not found`);
+    const schedule = buildSchedule(agentId);
+    row.schedule = schedule;
+    row.next_run_at = schedule[0]?.at ?? null;
+    return schedule;
+  }
 }
 
 let memoryStore: MemoryStore | null = null;
@@ -573,6 +582,20 @@ export async function getStatus(agentId: string): Promise<AgentStatus | null> {
     totalRuns: rec.totalRuns,
     schedule: rec.schedule,
   };
+}
+
+export async function rebuildSchedule(agentId: string): Promise<PublishSlot[]> {
+  if (!supabaseConfigured()) return getStore().rebuildSchedule(agentId);
+  const db = getClient();
+  const schedule = buildSchedule(agentId);
+  const { data, error } = await db
+    .from("agents")
+    .update({ schedule, next_run_at: schedule[0]?.at ?? null })
+    .eq("id", agentId)
+    .select("schedule")
+    .single();
+  if (error) throw new Error(`rebuildSchedule update failed: ${error.message}`);
+  return data.schedule as PublishSlot[];
 }
 
 export async function resetAgent(agentId: string): Promise<void> {
