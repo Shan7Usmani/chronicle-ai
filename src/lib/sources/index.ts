@@ -87,26 +87,62 @@ export async function discoverStories(opts?: {
     safeFetch(fetchTheHackerNews(limitPerSource)),
   ]);
 
-  const stories: SourceStory[] = [];
-  for (const group of groups) {
-    for (const story of group) {
-      const key = normalizeUrl(story.url);
-      const existing = stories.find((s) => normalizeUrl(s.url) === key);
-      if (!existing) {
-        stories.push(story);
-        continue;
-      }
-      const existingPoints = existing.points ?? 0;
+  const merged: SourceStory[] = [];
+  for (const group of groups) merged.push(...group);
+
+  const deduped = dedupeStories(merged);
+  deduped.sort((a, b) => dateToMs(b.publishedAt) - dateToMs(a.publishedAt));
+  return deduped.slice(0, maxTotal);
+}
+
+function titleTokens(title: string): Set<string> {
+  const normalized = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return new Set(normalized.split(/\s+/).filter(Boolean));
+}
+
+function titleJaccard(a: string, b: string): number {
+  const ta = titleTokens(a);
+  const tb = titleTokens(b);
+  if (ta.size === 0 || tb.size === 0) return 0;
+  let intersection = 0;
+  for (const token of ta) {
+    if (tb.has(token)) intersection += 1;
+  }
+  const union = ta.size + tb.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+export function dedupeStories(stories: SourceStory[]): SourceStory[] {
+  const out: SourceStory[] = [];
+  for (const story of stories) {
+    const key = normalizeUrl(story.url);
+    const existingUrl = out.find((s) => normalizeUrl(s.url) === key);
+    if (existingUrl) {
+      const existingPoints = existingUrl.points ?? 0;
       const newPoints = story.points ?? 0;
       if (newPoints > existingPoints) {
-        const idx = stories.indexOf(existing);
-        stories[idx] = story;
+        out[out.indexOf(existingUrl)] = story;
       }
+      continue;
     }
+    const existingTitle = out.find(
+      (s) => titleJaccard(s.title, story.title) > 0.7,
+    );
+    if (existingTitle) {
+      const existingPoints = existingTitle.points ?? 0;
+      const newPoints = story.points ?? 0;
+      if (newPoints > existingPoints) {
+        out[out.indexOf(existingTitle)] = story;
+      }
+      continue;
+    }
+    out.push(story);
   }
-
-  stories.sort((a, b) => dateToMs(b.publishedAt) - dateToMs(a.publishedAt));
-  return stories.slice(0, maxTotal);
+  return out;
 }
 
 async function safeFetch<T>(promise: Promise<T[]>): Promise<T[]> {

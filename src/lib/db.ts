@@ -117,6 +117,30 @@ function supabaseConfigured(): boolean {
   return Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+export function isSupabaseConfigured(): boolean {
+  return supabaseConfigured();
+}
+
+export async function acquireTickLock(
+  agentId: string,
+  nowMs: number,
+  windowMs: number,
+): Promise<boolean> {
+  if (!supabaseConfigured()) return true;
+  const db = getClient();
+  const lockAt = new Date(nowMs).toISOString();
+  const cutoff = new Date(nowMs - windowMs).toISOString();
+  const { data, error } = await db
+    .from("agents")
+    .update({ last_run_at: lockAt })
+    .eq("id", agentId)
+    .or(`last_run_at.is.null,last_run_at.lt.${cutoff}`)
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(`acquireTickLock failed: ${error.message}`);
+  return Boolean(data);
+}
+
 export class MemoryStore {
   private agents = new Map<string, AgentRow>();
   private topics = new Map<string, TopicRow>();

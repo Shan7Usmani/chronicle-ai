@@ -6,6 +6,7 @@ import type {
   TickResult,
 } from "@/lib/types";
 import {
+  acquireTickLock,
   ensureAgent,
   getAgent,
   getClient,
@@ -26,6 +27,7 @@ import { DEFAULT_PERSONA } from "@/lib/persona";
 import { getNextPendingSlot } from "@/lib/schedule";
 
 const MAX_REJECTION_SAMPLE = 5;
+const TICK_LOCK_WINDOW_MS = 90_000;
 
 const activeTicks = new Set<string>();
 
@@ -98,6 +100,16 @@ export async function runAgentTick(agentId?: string): Promise<TickResult> {
   if (activeTicks.has(resolvedId)) {
     console.warn(`[pipeline] tick already running for ${resolvedId}, skipping`);
     return emptyTickResult(resolvedId, ranAt);
+  }
+
+  try {
+    const locked = await acquireTickLock(resolvedId, nowMs, TICK_LOCK_WINDOW_MS);
+    if (!locked) {
+      console.warn(`[pipeline] tick lock held for ${resolvedId}, skipping concurrent run`);
+      return emptyTickResult(resolvedId, ranAt);
+    }
+  } catch (err) {
+    console.error("[pipeline] acquireTickLock failed (proceeding without lock):", err);
   }
   activeTicks.add(resolvedId);
 
