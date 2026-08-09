@@ -244,7 +244,7 @@ function PostCard({
   );
 }
 
-function ScheduleTimeline({ slots, nextRunAt }: { slots: Slot[]; nextRunAt: string | null }) {
+function ScheduleTimeline({ slots }: { slots: Slot[] }) {
   const total = slots.length;
   const published = slots.filter((s) => s.state === "published").length;
   const pct = total === 0 ? 0 : Math.round((published / total) * 100);
@@ -290,11 +290,11 @@ function ScheduleTimeline({ slots, nextRunAt }: { slots: Slot[]; nextRunAt: stri
       </div>
 
       <p className="text-xs muted">
-        {nextRunAt ? (
+        {upcoming.length > 0 ? (
           <>
             next slot{" "}
-            <span className="font-mono text-[#e6edf3]">{fmtClock(nextRunAt)}</span> local ·{" "}
-            {timeAgo(nextRunAt)}
+            <span className="font-mono text-[#e6edf3]">{fmtClock(upcoming[0].at)}</span> local ·{" "}
+            {timeAgo(upcoming[0].at)}
           </>
         ) : published === total && total > 0 ? (
           <span className="neon-text">all slots published — mission complete</span>
@@ -425,7 +425,8 @@ export default function LiveDashboard() {
     return () => clearInterval(t);
   }, [refresh]);
 
-  const countdown = useCountdown(status?.nextRunAt ?? null);
+  const nextSlotAt = status?.schedule?.find((s) => s.state === "pending")?.at ?? null;
+  const countdown = useCountdown(nextSlotAt);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -503,7 +504,7 @@ export default function LiveDashboard() {
 
       {/* Schedule */}
       {status?.schedule && status.schedule.length > 0 && (
-        <ScheduleTimeline slots={status.schedule} nextRunAt={status.nextRunAt} />
+        <ScheduleTimeline slots={status.schedule} />
       )}
 
       {/* Feed header + controls */}
