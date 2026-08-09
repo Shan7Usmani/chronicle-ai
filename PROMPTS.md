@@ -96,6 +96,20 @@ agent; made the app submission-ready (deploy path, spec compliance, gates).
 | 21 | ~01:10 | agent → files | Fixed `src/app/api/agent/init/route.ts` — empty POST body → `{}` (client sends none on first load) | Commit `7bab1ca`; live "Invalid JSON body" error fixed |
 | 22 | ~01:12 | agent → CLI | Live smoke test on Vercel prod: init → auto-published first post ~90s later via feed GET; idempotent; unknown agent → `{posts:[]}`; tick auth 401/200; missing agentId 400 | E3/Q5/C3 verified live |
 
+### 2026-08-09 — Build agent (opencode, session "Vicodathon")
+
+**Role in this project:** rebuilt the frontend to be fully reactive — a live
+dashboard instead of a static screen.
+
+| # | Time (IST) | Tool | Prompt (faithful) | Produced |
+|---|-----------|------|-------------------|----------|
+| 1 | ~18:30 | user → agent | "while the other agent is working to fix some bugs, i want you to change the entire frontend, at least make it reactive, right now it is like just a screen" | Audited current UI + API shapes; planned reactive rebuild |
+| 2 | ~18:40 | agent → files | Add motion/effect utilities to `src/app/globals.css`: shimmer title, fade-up/rise/stagger entrances, live-card glow, scan sheen, pulsing dots, ticker, reduced-motion fallback | `src/app/globals.css` |
+| 3 | ~18:45 | agent → files | Build `src/components/live-dashboard.tsx`: live per-second countdown to next publish, animated stat counters (published/rejected/runs/memory), publish-schedule timeline with progress bar + slot grid, search + newest/score sort on the feed, NEW-post highlight, collapsible editorial-rejections panel, 15s auto-refresh | `src/components/live-dashboard.tsx` (replaces `live-feed.tsx`) |
+| 4 | ~18:55 | agent → files | Rewrite `src/app/page.tsx`: animated hero (shimmer CHRONICLE title, glow pills), dashboard in a floating glass panel, animated pipeline flow cards (scan-line tops), hover-lift editorial charter | `src/app/page.tsx` |
+| 5 | ~19:00 | agent → CLI | `npx tsc --noEmit`, `npx eslint src`, `npx vitest run`, `npm run build`, dev-server smoke test on :3799 | All gates green (21 tests); page 200 + dashboard renders |
+| 6 | ~19:05 | agent → files | Logged this frontend rebuild in `PROMPTS.md` (session + feature mapping) | `PROMPTS.md` |
+
 ---
 
 ## Feature → Prompt Mapping
@@ -115,6 +129,7 @@ table updated so every shipped feature has at least one logged prompt:
 | Persistence (Supabase + in-memory fallback) | `src/lib/db.ts`, `supabase/migrations/00001_init.sql` | Build #2, #3; QA #19 |
 | Env/config validation | `src/lib/config.ts`, `.env.example` | Build #2; QA #5 |
 | Landing page + live feed UI | `src/app/page.tsx`, `src/components/live-feed.tsx` | Build #5 |
+| Reactive frontend (live countdown, animated stats, schedule timeline, search/sort feed, rejections) | `src/app/page.tsx`, `src/components/live-dashboard.tsx`, `src/app/globals.css` | Build #7 |
 | Feed self-trigger (F5 fix) | `src/app/api/agent/feed/route.ts`, `src/lib/agents/pipeline.ts` | QA #12, #14 |
 | Env collision fix (BASE_URL→SITE_URL) | `src/lib/config.ts` | QA #4, #5 |
 | Live deploy + prod smoke test | `README.md`, Vercel, live API | QA #16, #17, #22 |
