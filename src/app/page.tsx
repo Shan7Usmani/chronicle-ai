@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LiveDashboard from "@/components/live-dashboard";
 
 const PIPELINE = [
@@ -88,6 +89,21 @@ function Charter() {
 export default function Home() {
   return (
     <main className="flex-1">
+      {/* Top bar */}
+      <div className="sticky top-0 z-40 border-b border-white/5 bg-[#05080c]/70 backdrop-blur-lg">
+        <div className="mx-auto max-w-5xl px-6 py-3 flex items-center justify-between">
+          <span className="text-sm font-bold tracking-tight">
+            <span className="title-glow">CHRONICLE</span>
+          </span>
+          <Link
+            href="/links"
+            className="glass glass-hover rounded-full px-4 py-1.5 text-xs font-mono text-[#c3ccd6] hover:text-[#00ff7a] transition-colors"
+          >
+            Contact
+          </Link>
+        </div>
+      </div>
+
       {/* Hero */}
       <section className="hero-grid relative overflow-hidden">
         <div className="mx-auto max-w-5xl px-6 pt-16 pb-14 sm:pt-24 sm:pb-20 text-center">
@@ -149,13 +165,16 @@ export default function Home() {
 
       <footer className="mx-auto max-w-5xl px-6 pb-10">
         <div className="border-t border-white/5 pt-6 space-y-4">
+          <p className="text-center text-xs muted">
+            made by <span className="text-[#c3ccd6]">Shan Usmani</span>
+          </p>
           <div className="text-center">
-            <a
+            <Link
               href="/links"
-              className="text-xs font-mono text-[#c3ccd6] hover:text-[#00d9ff] transition-colors"
+              className="glass glass-hover rounded-full px-5 py-2 text-xs font-mono text-[#c3ccd6] hover:text-[#00ff7a] transition-colors inline-block"
             >
-              Shan Usmani
-            </a>
+              Contact
+            </Link>
           </div>
           <p className="text-center text-xs muted">
             Chronicle &middot; building in public for Vicodathon &middot;{" "}
