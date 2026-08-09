@@ -148,44 +148,17 @@ export default function Home() {
       </section>
 
       <footer className="mx-auto max-w-5xl px-6 pb-10">
-        <div className="border-t border-white/5 pt-6 space-y-5">
-          <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="border-t border-white/5 pt-6 space-y-4">
+          <div className="text-center">
             <a
-              href="https://github.com/Shan7Usmani"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="glass glass-hover rounded-full px-4 py-1.5 text-xs font-mono text-[#c3ccd6] hover:text-[#00d9ff] transition-colors"
+              href="/links"
+              className="text-xs font-mono text-[#c3ccd6] hover:text-[#00d9ff] transition-colors"
             >
-              ⌥ GitHub
-            </a>
-            <a
-              href="https://www.linkedin.com/in/shan-u-6b26b7361/"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="glass glass-hover rounded-full px-4 py-1.5 text-xs font-mono text-[#c3ccd6] hover:text-[#00ff7a] transition-colors"
-            >
-              in LinkedIn
-            </a>
-            <a
-              href="https://portfolio-one-gamma-59.vercel.app"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="glass glass-hover rounded-full px-4 py-1.5 text-xs font-mono text-[#c3ccd6] hover:text-[#ffb02e] transition-colors"
-            >
-              ⌂ Portfolio
+              Shan Usmani
             </a>
           </div>
           <p className="text-center text-xs muted">
-            Chronicle &middot; building in public for Vicodathon &middot; by{" "}
-            <a
-              href="https://github.com/Shan7Usmani"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="neon-text hover:opacity-80 transition-opacity"
-            >
-              Shan Usmani
-            </a>{" "}
-            &middot;{" "}
+            Chronicle &middot; building in public for Vicodathon &middot;{" "}
             <span className="neon-text">autonomously publishing</span> for the
             next 48 hours
           </p>
